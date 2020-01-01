@@ -1,25 +1,30 @@
 package nl.mens;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.view.View;
-import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
+
+import android.os.CountDownTimer;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Button;
+import android.widget.Toast;
+
+import java.util.concurrent.TimeUnit;
+
 
 public class MainActivity extends AppCompatActivity {
+    private static TextView countdownTimerText;
+    private static EditText minutes;
+    private static Button startTimer;
+    private static CountDownTimer countDownTimer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +32,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        countdownTimerText = (TextView) findViewById(R.id.counttime);
+        minutes = (EditText) findViewById(R.id.enterMinutes);
+        startTimer = (Button) findViewById(R.id.startTimer);
+
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -37,27 +47,49 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
+//private int counter;
     public void runCounter(View view) {
-        final TextView counttime=findViewById(R.id.counttime);
-        // counttime=findViewById(R.id.counttime);
+        if (countDownTimer == null) {
+            String getMinutes = minutes.getText().toString();
+            if (!getMinutes.equals("") && getMinutes.length() > 0) {
 
-        CountDownTimer timer =
-        new CountDownTimer(5000,1000) {
-            @Override
+                int noOfMinutes = Integer.parseInt(getMinutes) * 60 * 1000;//Convert minutes into milliseconds
+                countDownTimer =
+                        new CountDownTimer(noOfMinutes, 1000) {
+                            @Override
 
-            public void onTick(long millisUntilFinished) {
-                counttime.setText("Ticked");
+                            public void onTick(long millisUntilFinished) {
+                                long millis = millisUntilFinished;
+                                //Convert milliseconds into hour,minute and seconds
+                                String hms = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis), TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
+                                countdownTimerText.setText(hms);//set text
+                                minutes.setText(hms);
 
-            }    
-            @Override
-            public void onFinish() {
-                counttime.setText("Finished");
-            }
-        };
-        timer.start();
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                countdownTimerText.setText("Finished");
+                            }
+                        };
+                startTimer.setText("Reset");
+                countDownTimer.start();
+            } else
+                Toast.makeText(MainActivity.this, "Please enter no. of Minutes.", Toast.LENGTH_SHORT).show();//Display toast if edittext is empty
+        }
+        else {
+            countDownTimer.cancel();
+            countDownTimer = null;
+            startTimer.setText("Start");
+            countdownTimerText.setText("");
+            minutes.setText("");
+
+        }
+
+
+    
     }
-
+    
     private int notificationId =0;
     public void createNotification(View view){
         final TextView notText=findViewById(R.id.notificationText);
